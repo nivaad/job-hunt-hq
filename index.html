@@ -344,7 +344,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
   <button class="sb-item" onclick="scrollToCol('offer')"><span class="sb-item-icon">🎉</span> Offers <span class="sb-item-count" id="sb-cnt-offer">0</span></button>
   <button class="sb-item" onclick="scrollToCol('rejected')"><span class="sb-item-icon">✕</span> Rejected <span class="sb-item-count" id="sb-cnt-rejected">0</span></button>
 
-  <div class="sb-section-label" style="margin-top:6px">Activity</div>
+  <div class="sb-section-label">Activity</div>
+  <button class="sb-item" onclick="setView('timeline')"><span class="sb-item-icon">📅</span> Weekly Timeline</button>
   <button class="sb-item" onclick="switchRP('networking')"><span class="sb-item-icon">🤝</span> Networking</button>
   <button class="sb-item" onclick="switchRP('interviews')"><span class="sb-item-icon">🎯</span> Interviews</button>
 
@@ -369,6 +370,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
       <div class="view-toggle">
         <button class="vt-btn active" id="vt-board" onclick="setView('board')">⊞ Board</button>
         <button class="vt-btn" id="vt-list" onclick="setView('list')">≡ List</button>
+        <button class="vt-btn" id="vt-timeline" onclick="setView('timeline')">📅 Weekly</button>
       </div>
       <button class="btn-purple" onclick="openTodoModal()">+ To Do</button>
       <button class="btn-primary" onclick="openJobModal()">+ Application</button>
@@ -485,6 +487,69 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
       <thead><tr><th>#</th><th>Role</th><th>Company</th><th>Status</th><th>Source</th><th>Apply by / Applied</th><th>Salary</th><th>Comments</th><th></th></tr></thead>
       <tbody id="list-body"></tbody>
     </table>
+  </div>
+
+  <!-- WEEKLY TIMELINE VIEW -->
+  <div class="list-view" id="timeline-view" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="font-size:15px;font-weight:700;color:var(--text)">📅 Weekly Progress</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="changeWeek(-1)" style="background:#fff;border:1px solid var(--border2);color:var(--text2);padding:5px 12px;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-size:12px">← Prev</button>
+        <span id="week-label" style="font-size:13px;font-weight:600;color:var(--blue);min-width:140px;text-align:center"></span>
+        <button onclick="changeWeek(1)" style="background:#fff;border:1px solid var(--border2);color:var(--text2);padding:5px 12px;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-size:12px">Next →</button>
+        <button onclick="goToCurrentWeek()" style="background:var(--blue);color:#fff;border:none;padding:5px 12px;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-size:12px;font-weight:600">This week</button>
+      </div>
+    </div>
+    <div id="timeline-body"></div>
+  </div>
+</div>
+
+<!-- ═══ NETWORKING EDIT MODAL ═══ -->
+<div class="modal-overlay" id="net-modal-overlay">
+  <div class="job-modal" style="width:500px">
+    <div class="jm-header">
+      <div style="flex:1">
+        <div class="jm-id" id="nm-id-display">NETWORKING CONTACT</div>
+        <input class="jm-title-input" id="nm-name" placeholder="Name or event e.g. Arron Wylie"/>
+      </div>
+      <button class="jm-close" onclick="closeNetModal()">×</button>
+    </div>
+    <div class="jm-body">
+      <div class="jm-row">
+        <div class="jm-group"><div class="jm-label">Type</div>
+          <select class="jm-select" id="nm-type"><option value="linkedin">LinkedIn</option><option value="event">Event</option><option value="coffee">Coffee</option><option value="referral">Referral</option><option value="other">Other</option></select>
+        </div>
+        <div class="jm-group"><div class="jm-label">Follow-up needed?</div>
+          <select class="jm-select" id="nm-followup"><option value="no">No</option><option value="yes">Yes ⚡</option></select>
+        </div>
+      </div>
+      <div class="jm-row">
+        <div class="jm-group"><div class="jm-label">Company</div><input class="jm-input" id="nm-company" placeholder="e.g. Scyne Advisory"/></div>
+        <div class="jm-group"><div class="jm-label">Their role</div><input class="jm-input" id="nm-role" placeholder="e.g. Managing Director"/></div>
+      </div>
+      <div class="jm-row full">
+        <div class="jm-group"><div class="jm-label">Date</div><input class="jm-input" type="date" id="nm-date"/></div>
+      </div>
+      <div class="jm-row full">
+        <div class="jm-group"><div class="jm-label">Notes</div><textarea class="jm-textarea" id="nm-notes" placeholder="What was discussed? Any leads or next steps?"></textarea></div>
+      </div>
+    </div>
+    <div class="jm-comments">
+      <div class="jm-section-title">Progress Updates &amp; Comments</div>
+      <div class="comment-list" id="nm-comment-list"></div>
+      <div class="comment-form">
+        <textarea class="comment-textarea" id="nm-comment-text" placeholder="Add a weekly update, follow-up result, or next step…"></textarea>
+        <div class="comment-type-row">
+          <button class="comment-type-btn update active" id="nct-update" onclick="setNetCommentType('update')">📢 Update</button>
+          <button class="comment-type-btn note" id="nct-note" onclick="setNetCommentType('note')">📝 Note</button>
+          <button class="comment-submit" onclick="submitNetComment()">Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="jm-footer">
+      <button class="btn-ghost" onclick="closeNetModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveNetModal()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -661,6 +726,7 @@ var interviews = JSON.parse(localStorage.getItem('niva_interviews')|| JSON.strin
 
 // migrate: ensure all jobs have comments array
 jobs.forEach(function(j){ if(!j.comments) j.comments=[]; if(!j.isTodo) j.isTodo=false; if(!j.priority) j.priority='medium'; });
+network.forEach(function(n){ if(!n.comments) n.comments=[]; });
 
 var searchQ = '';
 var dragId  = null;
@@ -831,10 +897,13 @@ function setView(v){
   currentView=v;
   document.getElementById('board-view').style.display = v==='board'?'flex':'none';
   document.getElementById('list-view').style.display  = v==='list'?'block':'none';
-  document.getElementById('bc-active').textContent    = v==='board'?'Board':'List';
+  document.getElementById('timeline-view').style.display = v==='timeline'?'block':'none';
+  document.getElementById('bc-active').textContent = v==='board'?'Board':v==='list'?'List':'Weekly Timeline';
   document.getElementById('vt-board').classList.toggle('active',v==='board');
   document.getElementById('vt-list').classList.toggle('active',v==='list');
+  document.getElementById('vt-timeline').classList.toggle('active',v==='timeline');
   if(v==='list') renderList();
+  if(v==='timeline') renderTimeline();
 }
 
 function scrollToCol(id){ var el=document.getElementById('col-'+id); if(el) el.scrollIntoView({behavior:'smooth',inline:'center'}); }
@@ -996,20 +1065,264 @@ function renderNetwork(){
   if(!network.length){ el.innerHTML='<div class="empty-col"><div class="ec-icon">🤝</div>No networking logged yet</div>'; return; }
   var sorted=network.slice().sort(function(a,b){ return b.date>a.date?1:-1; });
   el.innerHTML=sorted.map(function(n){
-    return '<div class="act-card">'+
-      '<div class="act-name">'+n.name+'</div>'+
-      '<div class="act-sub">'+(n.company||'')+(n.role?' · '+n.role:'')+'</div>'+
+    var cc=(n.comments||[]).length;
+    return '<div class="act-card" style="cursor:pointer" onclick="openNetModal('+n.id+')">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+        '<div>'+
+          '<div class="act-name">'+n.name+'</div>'+
+          '<div class="act-sub">'+(n.company||'')+(n.role?' · '+n.role:'')+'</div>'+
+        '</div>'+
+        '<button class="act-del" onclick="delNet('+n.id+');event.stopPropagation()">✕</button>'+
+      '</div>'+
       (n.notes?'<div class="act-notes">'+n.notes+'</div>':'')+
       '<div class="act-footer">'+
-        '<span class="ntag nt-'+n.type+'">'+(ntLabels[n.type]||n.type)+'</span>'+
-        '<div style="display:flex;align-items:center;gap:5px">'+
+        '<div style="display:flex;gap:5px;align-items:center">'+
+          '<span class="ntag nt-'+n.type+'">'+(ntLabels[n.type]||n.type)+'</span>'+
           '<span class="'+(n.followup==='yes'?'fp-yes':'fp-no')+'">'+(n.followup==='yes'?'⚡ Follow up':'—')+'</span>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:6px">'+
+          '<span class="kcard-comment-badge '+(cc>0?'has-comments':'')+'" style="cursor:pointer">💬 '+(cc||0)+'</span>'+
           '<span style="font-size:10px;color:var(--text3)">'+n.date+'</span>'+
-          '<button class="act-del" onclick="delNet('+n.id+')">✕</button>'+
         '</div>'+
       '</div>'+
     '</div>';
   }).join('');
+}
+
+// ═══ NETWORKING MODAL ═══
+var openNetId = null;
+var netCommentType = 'update';
+function openNetModal(id){
+  var n=network.find(function(x){ return x.id===id; });
+  if(!n) return;
+  openNetId=id; netCommentType='update';
+  if(!n.comments) n.comments=[];
+  document.getElementById('nm-id-display').textContent='NET-'+String(id).slice(-4);
+  document.getElementById('nm-name').value=n.name;
+  document.getElementById('nm-type').value=n.type;
+  document.getElementById('nm-followup').value=n.followup||'no';
+  document.getElementById('nm-company').value=n.company||'';
+  document.getElementById('nm-role').value=n.role||'';
+  document.getElementById('nm-date').value=n.date||today();
+  document.getElementById('nm-notes').value=n.notes||'';
+  document.getElementById('nm-comment-text').value='';
+  renderNetComments(n.comments);
+  document.getElementById('net-modal-overlay').classList.add('open');
+}
+function closeNetModal(){ document.getElementById('net-modal-overlay').classList.remove('open'); openNetId=null; }
+function saveNetModal(){
+  var name=document.getElementById('nm-name').value.trim();
+  if(!name){ alert('Name is required.'); return; }
+  var idx=network.findIndex(function(n){ return n.id===openNetId; });
+  if(idx>-1){
+    network[idx].name=name;
+    network[idx].type=document.getElementById('nm-type').value;
+    network[idx].followup=document.getElementById('nm-followup').value;
+    network[idx].company=document.getElementById('nm-company').value.trim();
+    network[idx].role=document.getElementById('nm-role').value.trim();
+    network[idx].date=document.getElementById('nm-date').value||today();
+    network[idx].notes=document.getElementById('nm-notes').value.trim();
+  }
+  save(); renderNetwork(); closeNetModal();
+}
+function setNetCommentType(t){
+  netCommentType=t;
+  document.getElementById('nct-update').classList.toggle('active',t==='update');
+  document.getElementById('nct-note').classList.toggle('active',t==='note');
+}
+function submitNetComment(){
+  var text=document.getElementById('nm-comment-text').value.trim();
+  if(!text||!openNetId) return;
+  var n=network.find(function(x){ return x.id===openNetId; });
+  if(!n) return;
+  if(!n.comments) n.comments=[];
+  n.comments.push({id:tid(),type:netCommentType,text:text,date:today(),ts:Date.now()});
+  save(); renderNetComments(n.comments);
+  document.getElementById('nm-comment-text').value='';
+  renderNetwork();
+}
+function renderNetComments(comments){
+  var el=document.getElementById('nm-comment-list');
+  if(!comments||!comments.length){ el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">No updates yet — add your first one below.</div>'; return; }
+  var sorted=comments.slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+  el.innerHTML=sorted.map(function(c){
+    return '<div class="comment-item '+(c.type==='note'?'note-comment':'')+'">'+
+      '<button class="comment-del" onclick="delNetComment('+openNetId+','+c.id+')">✕</button>'+
+      '<div class="comment-meta">'+
+        '<span class="comment-author">'+(c.type==='note'?'📝 Note':'📢 Update')+'</span>'+
+        '<span class="comment-date">'+c.date+'</span>'+
+      '</div>'+
+      '<div class="comment-text">'+c.text+'</div>'+
+    '</div>';
+  }).join('');
+}
+function delNetComment(netId,commentId){
+  var n=network.find(function(x){ return x.id===netId; });
+  if(!n) return;
+  n.comments=n.comments.filter(function(c){ return c.id!==commentId; });
+  save(); renderNetComments(n.comments); renderNetwork();
+}
+
+// ═══ WEEKLY TIMELINE ═══
+var timelineWeekOffset = 0;
+function getWeekStart(offset){
+  var d=new Date();
+  var day=d.getDay(); // 0=Sun
+  var diff=d.getDate() - day + (day===0?-6:1); // Monday
+  var monday=new Date(d.setDate(diff));
+  monday.setDate(monday.getDate() + offset*7);
+  monday.setHours(0,0,0,0);
+  return monday;
+}
+function getWeekDates(offset){
+  var start=getWeekStart(offset);
+  var dates=[];
+  for(var i=0;i<7;i++){
+    var d=new Date(start);
+    d.setDate(d.getDate()+i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  return dates;
+}
+function fmtDate(d){
+  var p=d.split('-'); return p[2]+'/'+p[1];
+}
+function changeWeek(dir){ timelineWeekOffset+=dir; renderTimeline(); }
+function goToCurrentWeek(){ timelineWeekOffset=0; renderTimeline(); }
+
+function renderTimeline(){
+  var dates=getWeekDates(timelineWeekOffset);
+  var start=dates[0]; var end=dates[6];
+  var startObj=new Date(start+'T00:00:00');
+  var endObj=new Date(end+'T23:59:59');
+
+  // week label
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var s=new Date(start+'T00:00:00'); var e=new Date(end+'T00:00:00');
+  document.getElementById('week-label').textContent =
+    fmtDate(start)+' '+months[s.getMonth()]+' — '+fmtDate(end)+' '+months[e.getMonth()]+' '+e.getFullYear();
+
+  // filter all activity this week
+  var weekJobs     = jobs.filter(function(j){ return j.date>=start && j.date<=end && !j.isTodo; });
+  var weekTodos    = jobs.filter(function(j){ return j.isTodo && j.deadline>=start && j.deadline<=end; });
+  var weekNetwork  = network.filter(function(n){ return n.date>=start && n.date<=end; });
+  var weekInterviews = interviews.filter(function(i){ return i.date>=start && i.date<=end; });
+
+  // also get comment activity this week
+  var commentActivity = [];
+  jobs.forEach(function(j){
+    (j.comments||[]).forEach(function(c){
+      if(c.date>=start && c.date<=end) commentActivity.push({type:'job-comment',job:j,comment:c,date:c.date});
+    });
+  });
+  network.forEach(function(n){
+    (n.comments||[]).forEach(function(c){
+      if(c.date>=start && c.date<=end) commentActivity.push({type:'net-comment',net:n,comment:c,date:c.date});
+    });
+  });
+
+  var statColors={applied:'var(--blue)',interview:'#ff8b00',assessment:'#de350b',offer:'var(--green)',rejected:'var(--text3)'};
+  var statLabels={applied:'Applied',interview:'Interviewing',assessment:'Assessment',offer:'Offer 🎉',rejected:'Rejected'};
+  var ntLabels={linkedin:'LinkedIn',event:'Event',coffee:'Coffee',referral:'Referral',other:'Other'};
+
+  function section(icon, title, color, items){
+    if(!items.length) return '';
+    return '<div style="margin-bottom:16px">'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+color+';margin-bottom:8px;display:flex;align-items:center;gap:6px">'+
+        '<span style="width:3px;height:14px;border-radius:2px;background:'+color+';display:inline-block"></span>'+icon+' '+title+' <span style="background:'+color+'22;color:'+color+';font-size:10px;padding:1px 7px;border-radius:10px;font-weight:700">'+items.length+'</span>'+
+      '</div>'+
+      items.join('')+
+    '</div>';
+  }
+
+  var jobItems = weekJobs.map(function(j){
+    return '<div style="background:#fff;border:1px solid var(--border);border-left:3px solid '+(statColors[j.status]||'var(--blue)')+';border-radius:var(--radius-md);padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="openJobModalEdit('+j.id+')">'+
+      '<div>'+
+        '<div style="font-weight:600;font-size:12px">'+j.title+'</div>'+
+        '<div style="font-size:11px;color:var(--text3)">'+j.company+'</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:7px">'+
+        '<span style="font-size:10px;font-weight:700;color:'+(statColors[j.status]||'var(--blue)')+'">'+statLabels[j.status]+'</span>'+
+        '<span style="font-size:10px;color:var(--text3)">'+j.date+'</span>'+
+      '</div>'+
+    '</div>';
+  });
+
+  var todoItems = weekTodos.map(function(j){
+    return '<div style="background:#fff;border:1px solid var(--border);border-left:3px solid #6554c0;border-radius:var(--radius-md);padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="openJobModalEdit('+j.id+')">'+
+      '<div>'+
+        '<div style="font-weight:600;font-size:12px">'+j.title+'</div>'+
+        '<div style="font-size:11px;color:var(--text3)">'+j.company+'</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:7px">'+
+        '<span style="font-size:10px;font-weight:700;color:#6554c0">Apply by '+j.deadline+'</span>'+
+      '</div>'+
+    '</div>';
+  });
+
+  var netItems = weekNetwork.map(function(n){
+    var cc=(n.comments||[]).length;
+    return '<div style="background:#fff;border:1px solid var(--border);border-left:3px solid #00695c;border-radius:var(--radius-md);padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="openNetModal('+n.id+')">'+
+      '<div>'+
+        '<div style="font-weight:600;font-size:12px">'+n.name+'</div>'+
+        '<div style="font-size:11px;color:var(--text3)">'+(n.company||'')+(n.role?' · '+n.role:'')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:7px">'+
+        '<span style="font-size:10px;font-weight:600;background:#e6fcff;color:#00695c;padding:2px 7px;border-radius:3px">'+(ntLabels[n.type]||n.type)+'</span>'+
+        (n.followup==='yes'?'<span style="font-size:10px;font-weight:600;color:#974f0c;background:#fff4e5;padding:2px 7px;border-radius:3px">⚡ Follow up</span>':'')+
+        '<span style="font-size:10px;color:var(--text3)">'+n.date+'</span>'+
+        '<span style="font-size:10px;color:var(--purple)">💬 '+cc+'</span>'+
+      '</div>'+
+    '</div>';
+  });
+
+  var intItems = weekInterviews.map(function(i){
+    return '<div style="background:#fff;border:1px solid var(--border);border-left:3px solid #ff8b00;border-radius:var(--radius-md);padding:9px 12px;margin-bottom:6px">'+
+      '<div style="font-weight:600;font-size:12px">'+i.title+' — '+i.company+'</div>'+
+      '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+i.type+' · '+i.outcome+'</div>'+
+    '</div>';
+  });
+
+  var cmtItems = commentActivity.map(function(a){
+    var label = a.type==='job-comment'
+      ? (a.job.title+' @ '+a.job.company)
+      : (a.net.name+' @ '+(a.net.company||''));
+    var color = a.type==='job-comment' ? 'var(--blue)' : '#00695c';
+    return '<div style="background:#fff;border:1px solid var(--border);border-left:3px solid '+color+';border-radius:var(--radius-md);padding:9px 12px;margin-bottom:6px">'+
+      '<div style="font-size:10px;font-weight:700;color:'+color+';margin-bottom:3px">'+(a.comment.type==='note'?'📝 Note':'📢 Update')+' on: '+label+'</div>'+
+      '<div style="font-size:12px;color:var(--text)">'+a.comment.text+'</div>'+
+      '<div style="font-size:10px;color:var(--text3);margin-top:3px">'+a.date+'</div>'+
+    '</div>';
+  });
+
+  var totalActivity = weekJobs.length+weekTodos.length+weekNetwork.length+weekInterviews.length+commentActivity.length;
+  var summaryColor = totalActivity===0?'var(--text3)':totalActivity<3?'var(--yellow)':totalActivity<7?'var(--blue)':'var(--green)';
+  var summaryMsg = totalActivity===0?'😴 Quiet week — time to pick up the pace!':totalActivity<3?'🌱 Getting started — keep going!':totalActivity<7?'💪 Solid week Niva!':'🔥 Amazing week — you\'re crushing it!';
+
+  var html = '<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">'+
+    '<div>'+
+      '<div style="font-size:12px;font-weight:700;color:var(--text)">Week summary</div>'+
+      '<div style="font-size:12px;color:'+summaryColor+';margin-top:3px;font-weight:600">'+summaryMsg+'</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:16px;text-align:center">'+
+      '<div><div style="font-size:20px;font-weight:700;color:var(--blue)">'+weekJobs.length+'</div><div style="font-size:10px;color:var(--text3)">Applications</div></div>'+
+      '<div><div style="font-size:20px;font-weight:700;color:#00695c">'+weekNetwork.length+'</div><div style="font-size:10px;color:var(--text3)">Networking</div></div>'+
+      '<div><div style="font-size:20px;font-weight:700;color:#ff8b00">'+weekInterviews.length+'</div><div style="font-size:10px;color:var(--text3)">Interviews</div></div>'+
+      '<div><div style="font-size:20px;font-weight:700;color:#6554c0">'+commentActivity.length+'</div><div style="font-size:10px;color:var(--text3)">Updates</div></div>'+
+    '</div>'+
+  '</div>';
+
+  if(totalActivity===0){
+    html += '<div style="text-align:center;padding:40px;color:var(--text3);background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border)"><div style="font-size:32px;margin-bottom:10px">📭</div>No activity logged this week.<br>Switch to Board view to add applications or networking!</div>';
+  } else {
+    html += section('📋','Applications','var(--blue)',jobItems);
+    html += section('📌','To Do deadlines this week','#6554c0',todoItems);
+    html += section('🤝','Networking','#00695c',netItems);
+    html += section('🎯','Interviews','#ff8b00',intItems);
+    html += section('💬','Progress updates','#403294',cmtItems);
+  }
+
+  document.getElementById('timeline-body').innerHTML=html;
 }
 
 // ═══ INTERVIEWS ═══
@@ -1048,6 +1361,7 @@ function delInt(id){ if(confirm('Remove?')){ interviews=interviews.filter(functi
 // close on overlay click
 document.getElementById('job-modal-overlay').addEventListener('click',function(e){ if(e.target===this) closeJobModal(); });
 document.getElementById('todo-modal-overlay').addEventListener('click',function(e){ if(e.target===this) closeTodoModal(); });
+document.getElementById('net-modal-overlay').addEventListener('click',function(e){ if(e.target===this) closeNetModal(); });
 
 // ═══ INIT ═══
 renderBoard();
